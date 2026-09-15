@@ -1,6 +1,7 @@
 import type { RetroKaplay } from "@games/kit";
 import { hexToRgb, playSfx, SWEETIE16 } from "@games/kit";
 import { type RunState, resetRun } from "../state.js";
+import { enterTerminal } from "../systems/rules.js";
 
 const causeLine = (cause: unknown): string => {
   if (cause === "time") {
@@ -18,9 +19,7 @@ const causeLine = (cause: unknown): string => {
 export const registerGameOverScene = (k: RetroKaplay, run: RunState): void => {
   k.scene("gameover", () => {
     const won = run.extra.won === true;
-    run.state = won ? "win" : "gameover";
-    run.scene = "gameover";
-    run.paused = false;
+    enterTerminal(run);
 
     const title = won ? "YOU WIN" : "GAME OVER";
     const titleColor = won ? SWEETIE16[5] : SWEETIE16[2];

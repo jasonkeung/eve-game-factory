@@ -9,18 +9,27 @@ import {
   FINAL_CHECKPOINT,
 } from "../levels/checkpoints.js";
 import type { RunState } from "../state.js";
+import {
+  applyCheckpoint,
+  applyFuel,
+  applyHit,
+  applyPass,
+  markOutcome,
+  playerScreenX,
+  ROAD_HALF,
+  roadsideCheck,
+  startBoost,
+  steerOffset,
+  tickTimer,
+} from "../systems/rules.js";
 
-const ROAD_HALF = 52;
 const EDGE_W = 4;
 const STRIP_H = 4;
 const LANE_OFFSETS = [-32, 0, 32] as const;
-const OFFROAD_LIMIT = ROAD_HALF - 7;
 const CRUISE_MIN = 100;
 const CRUISE_MAX = 190;
-const BOOST_TIME = 1.1;
 const BOOST_BONUS = 130;
 const BOOST_RECHARGE = 2.8;
-const STEER_SPEED = 130;
 
 const rgb = (idx: number): [number, number, number] =>
   hexToRgb(SWEETIE16[idx] ?? SWEETIE16[0]);
@@ -168,8 +177,7 @@ export const registerGameScene = (
         return;
       }
       ended = true;
-      run.extra.won = won;
-      run.extra.cause = cause;
+      markOutcome(run, won, cause);
       playSfx(won ? "win" : "lose");
       k.wait(0.7, () => {
         k.go("gameover");
@@ -182,13 +190,12 @@ export const registerGameScene = (
       }
       invuln = 1.5;
       slowTimer = 1.1;
-      run.lives -= 1;
-      run.lastEvent = "hit";
+      const dead = applyHit(run);
       playSfx("hit");
       k.shake(6);
       puff(player.pos.x, player.pos.y, 3, 8, 14);
       puff(player.pos.x, player.pos.y, 13, 6, 14);
-      if (run.lives <= 0) {
+      if (dead) {
         endRun(false, cause);
       }
     };
@@ -197,18 +204,16 @@ export const registerGameScene = (
       if (ended) {
         return;
       }
-      run.score += 500;
-      run.lastEvent = "checkpoint";
       playSfx("pickup");
       bannerTime = 1.2;
       banner.text = `${cfg.label} CLEAR`;
-      if (run.level >= FINAL_CHECKPOINT) {
+      const nextDuration = CHECKPOINTS[run.level]?.duration ?? cfg.duration;
+      const outcome = applyCheckpoint(run, FINAL_CHECKPOINT, nextDuration);
+      if (outcome === "win") {
         endRun(true, "finish");
         return;
       }
-      run.level += 1;
       cfg = cfgFor();
-      run.timer = cfg.duration;
       distance = 0;
     };
 
@@ -227,9 +232,7 @@ export const registerGameScene = (
       }
       puff(can.pos.x, can.pos.y, 4, 6, 10);
       can.destroy();
-      run.score += 250;
-      run.timer = Math.min(cfg.duration, run.timer + 3);
-      run.lastEvent = "fuel";
+      applyFuel(run, cfg.duration);
       playSfx("pickup");
     });
 
@@ -316,10 +319,9 @@ export const registerGameScene = (
       if (ended || run.paused || run.state !== "playing") {
         return;
       }
-      if (run.boostMeter >= 1 && boostTime <= 0) {
-        boostTime = BOOST_TIME;
-        run.boostMeter = 0;
-        run.lastEvent = "boost";
+      const started = startBoost(run, boostTime);
+      if (started !== null) {
+        boostTime = started;
         playSfx("shoot");
       }
     });
@@ -347,9 +349,7 @@ export const registerGameScene = (
       const dt = k.dt();
 
       // Clock.
-      run.timer -= dt;
-      if (run.timer <= 0) {
-        run.timer = 0;
+      if (tickTimer(run, dt)) {
         endRun(false, "time");
         return;
       }
@@ -402,7 +402,7 @@ export const registerGameScene = (
       if (k.isButtonDown("right")) {
         steer += 1;
       }
-      playerOffset += steer * STEER_SPEED * dt;
+      playerOffset = steerOffset(playerOffset, steer, dt);
       if (steer !== 0) {
         dustTimer -= dt;
         if (dustTimer <= 0) {
@@ -411,14 +411,14 @@ export const registerGameScene = (
         }
       }
 
-      // Roadside check.
-      if (Math.abs(playerOffset) > OFFROAD_LIMIT) {
-        // Nudge back onto the asphalt so one scrape is one hit.
-        playerOffset = (playerOffset > 0 ? 1 : -1) * (OFFROAD_LIMIT - 12);
+      // Roadside check: one scrape is one hit, then back onto the asphalt.
+      const roadside = roadsideCheck(playerOffset);
+      playerOffset = roadside.offset;
+      if (roadside.hit) {
         hitPlayer("roadside");
       }
 
-      player.pos.x = centerX(PLAYER_Y) + playerOffset;
+      player.pos.x = playerScreenX(centerX(PLAYER_Y), playerOffset);
       run.playerX = player.pos.x;
 
       // Invulnerability flicker.
@@ -453,8 +453,7 @@ export const registerGameScene = (
         if (car.pos.y > 200) {
           traffic.splice(i, 1);
           car.destroy();
-          run.score += 100;
-          run.lastEvent = "pass";
+          applyPass(run);
           playSfx("pickup");
           puff(player.pos.x, player.pos.y - 10, 12, 4, 10);
         }
