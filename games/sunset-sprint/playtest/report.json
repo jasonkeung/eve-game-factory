@@ -1,0 +1,37 @@
+{
+  "checks": [
+    {
+      "evidence": "window.__ready resolved",
+      "id": "ready",
+      "passed": true
+    },
+    {
+      "evidence": "state=title",
+      "id": "title-state",
+      "passed": true
+    },
+    {
+      "evidence": "state=playing",
+      "id": "start-playing",
+      "passed": true
+    },
+    {
+      "evidence": "state=playing score=300",
+      "id": "session-held",
+      "passed": true
+    },
+    {
+      "evidence": "clean",
+      "id": "no-console-errors",
+      "passed": true
+    }
+  ],
+  "consoleErrors": [],
+  "passed": true,
+  "screenshots": [
+    "games/sunset-sprint/playtest/title.png",
+    "games/sunset-sprint/playtest/gameplay.png",
+    "games/sunset-sprint/playtest/end.png"
+  ],
+  "slug": "sunset-sprint"
+}
