@@ -114,6 +114,22 @@ importers:
         specifier: ^7.1.5
         version: 7.3.6(@types/node@24.13.3)(tsx@4.23.13)(yaml@2.9.0)
 
+  games/sunset-sprint:
+    dependencies:
+      '@games/kit':
+        specifier: workspace:*
+        version: link:../_kit
+      kaplay:
+        specifier: 4000.0.0-alpha.27.1
+        version: 4000.0.0-alpha.27.1
+    devDependencies:
+      typescript:
+        specifier: ^5.9.2
+        version: 5.9.3
+      vite:
+        specifier: ^7.1.5
+        version: 7.3.6(@types/node@24.13.3)(tsx@4.23.13)(yaml@2.9.0)
+
   web:
     dependencies:
       eve:
