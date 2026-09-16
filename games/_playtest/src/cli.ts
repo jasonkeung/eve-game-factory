@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { spawnSync } from "node:child_process";
 import { createReadStream, existsSync } from "node:fs";
 import { mkdir, writeFile } from "node:fs/promises";
 import {
@@ -131,6 +132,37 @@ const buildGame = async (slug: string): Promise<string> => {
 
 const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 
+/**
+ * Launch headless chromium, self-provisioning on a clean station. When the
+ * first launch fails (missing browser download or missing OS libraries such
+ * as libglib-2.0.so.0), run Playwright's supported setup command
+ * `playwright install --with-deps chromium` and retry once. The command is
+ * idempotent, uses sudo automatically for the apt step when not root, and is
+ * the same route Playwright documents for CI machines.
+ */
+const launchChromium = async () => {
+  try {
+    return await chromium.launch({ headless: true });
+  } catch (err) {
+    console.error(
+      `chromium launch failed (${err instanceof Error ? err.message.split("\n")[0] : String(err)}); ` +
+        "running `playwright install --with-deps chromium` and retrying"
+    );
+    const install = spawnSync(
+      "pnpm",
+      ["exec", "playwright", "install", "--with-deps", "chromium"],
+      { cwd: ROOT, stdio: "inherit" }
+    );
+    if (install.status !== 0) {
+      throw new Error(
+        `playwright install --with-deps chromium exited with ${String(install.status)}`,
+        { cause: err }
+      );
+    }
+    return await chromium.launch({ headless: true });
+  }
+};
+
 const main = async () => {
   const { slug, genre } = parseArgs(process.argv);
   const outDir = await buildGame(slug);
@@ -142,7 +174,7 @@ const main = async () => {
   const consoleErrors: string[] = [];
   const screenshots: string[] = [];
 
-  const browser = await chromium.launch({ headless: true });
+  const browser = await launchChromium();
   const page = await browser.newPage({ viewport: { height: 540, width: 960 } });
 
   page.on("console", (msg) => {

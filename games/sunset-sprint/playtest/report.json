@@ -16,7 +16,7 @@
       "passed": true
     },
     {
-      "evidence": "playerX 160 -> left 129.67100000000002 -> right 188.18400000000005",
+      "evidence": "playerX 160 -> left 129.68400000000005 -> right 190.342",
       "id": "steer-seam",
       "passed": true
     },
@@ -36,13 +36,18 @@
       "passed": true
     },
     {
-      "evidence": "no life lost during the run",
+      "evidence": "state=win score=4600 lives=2 checkpoint=3",
+      "id": "terminal-state",
+      "passed": true
+    },
+    {
+      "evidence": "lives 3 -> 2 with lastEvent=hit seen=true",
       "id": "life-event-seam",
       "passed": true
     },
     {
-      "evidence": "state=win score=4700 lives=2 checkpoint=3",
-      "id": "terminal-state",
+      "evidence": "state=gameover lives=0 cause=roadside hit events seen=true",
+      "id": "gameover-route",
       "passed": true
     },
     {
