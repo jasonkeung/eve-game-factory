@@ -24,8 +24,12 @@ import {
   tickTimer,
 } from "../systems/rules.js";
 
-const EDGE_W = 4;
 const STRIP_H = 4;
+const HORIZON_Y = 58;
+const ROAD_FAR_HALF = 11;
+const ROAD_NEAR_HALF = 104;
+const SHOULDER_FAR = 2;
+const SHOULDER_NEAR = 11;
 const LANE_OFFSETS = [-32, 0, 32] as const;
 const CRUISE_MIN = 100;
 const CRUISE_MAX = 190;
@@ -44,6 +48,10 @@ export const registerGameScene = (
   const dashColor = k.rgb(...rgb(12));
   const trimColor = k.rgb(...rgb(4));
   const postColor = k.rgb(...rgb(3));
+  const skyColor = k.rgb(...rgb(8));
+  const skyBandColor = k.rgb(...rgb(9));
+  const groundColor = k.rgb(...rgb(1));
+  const sunColor = k.rgb(...rgb(4));
 
   k.scene("game", () => {
     run.state = "playing";
@@ -81,56 +89,114 @@ export const registerGameScene = (
     const centerX = (y: number): number =>
       160 + bend * Math.sin((scroll + (180 - y)) * 0.01);
 
-    // Scrolling road drawn under everything else.
+    const perspectiveAt = (y: number): number =>
+      Math.max(0, Math.min(1, (y - HORIZON_Y) / (180 - HORIZON_Y)));
+
+    const roadHalfAt = (y: number): number =>
+      ROAD_FAR_HALF + (ROAD_NEAR_HALF - ROAD_FAR_HALF) * perspectiveAt(y);
+
+    const shoulderWidthAt = (y: number): number =>
+      SHOULDER_FAR + (SHOULDER_NEAR - SHOULDER_FAR) * perspectiveAt(y);
+
+    const laneScreenX = (y: number, laneOffset: number): number =>
+      centerX(y) + laneOffset * (roadHalfAt(y) / ROAD_HALF);
+
+    // Perspective highway drawn under everything else.
     const road = k.add([k.pos(0, 0), k.z(0)]);
     road.onDraw(() => {
-      for (let y = 0; y < 180; y += STRIP_H) {
+      k.drawRect({
+        color: skyColor,
+        height: HORIZON_Y,
+        pos: k.vec2(0, 0),
+        width: 320,
+      });
+      k.drawCircle({
+        color: sunColor,
+        pos: k.vec2(250, 38),
+        radius: 10,
+      });
+      k.drawRect({
+        color: skyBandColor,
+        height: 5,
+        pos: k.vec2(0, 40),
+        width: 320,
+      });
+      k.drawRect({
+        color: trimColor,
+        height: 5,
+        pos: k.vec2(0, 49),
+        width: 320,
+      });
+      k.drawRect({
+        color: groundColor,
+        height: 180 - HORIZON_Y,
+        pos: k.vec2(0, HORIZON_Y),
+        width: 320,
+      });
+
+      for (let y = HORIZON_Y; y < 180; y += STRIP_H) {
+        const nextY = Math.min(180, y + STRIP_H);
         const c = centerX(y);
-        const worldY = y + scroll;
-        k.drawRect({
+        const nextC = centerX(nextY);
+        const half = roadHalfAt(y);
+        const nextHalf = roadHalfAt(nextY);
+        const shoulder = half + shoulderWidthAt(y);
+        const nextShoulder = nextHalf + shoulderWidthAt(nextY);
+
+        k.drawPolygon({
           color: trimColor,
-          height: STRIP_H,
-          pos: k.vec2(c - ROAD_HALF - EDGE_W, y),
-          width: EDGE_W,
+          pts: [
+            k.vec2(c - shoulder, y),
+            k.vec2(nextC - nextShoulder, nextY),
+            k.vec2(nextC + nextShoulder, nextY),
+            k.vec2(c + shoulder, y),
+          ],
         });
-        k.drawRect({
+        k.drawPolygon({
           color: roadColor,
-          height: STRIP_H,
-          pos: k.vec2(c - ROAD_HALF, y),
-          width: ROAD_HALF * 2,
+          pts: [
+            k.vec2(c - half, y),
+            k.vec2(nextC - nextHalf, nextY),
+            k.vec2(nextC + nextHalf, nextY),
+            k.vec2(c + half, y),
+          ],
         });
-        k.drawRect({
-          color: trimColor,
-          height: STRIP_H,
-          pos: k.vec2(c + ROAD_HALF, y),
-          width: EDGE_W,
-        });
-        if (((worldY % 24) + 24) % 24 < 12) {
-          k.drawRect({
+
+        const worldY = y + scroll;
+        if (((worldY % 36) + 36) % 36 < 18) {
+          const laneHalf = half * 0.34;
+          const nextLaneHalf = nextHalf * 0.34;
+          const markerWidth = Math.max(1, Math.round(perspectiveAt(y) * 3));
+          k.drawLine({
             color: dashColor,
-            height: STRIP_H,
-            pos: k.vec2(c - 17, y),
-            width: 2,
+            p1: k.vec2(c - laneHalf, y),
+            p2: k.vec2(nextC - nextLaneHalf, nextY),
+            width: markerWidth,
           });
-          k.drawRect({
+          k.drawLine({
             color: dashColor,
-            height: STRIP_H,
-            pos: k.vec2(c + 15, y),
-            width: 2,
+            p1: k.vec2(c + laneHalf, y),
+            p2: k.vec2(nextC + nextLaneHalf, nextY),
+            width: markerWidth,
           });
         }
+
         if (((worldY % 48) + 48) % 48 < STRIP_H) {
+          const depth = perspectiveAt(y);
+          const postWidth = Math.max(1, Math.round(1 + depth * 3));
+          const postHeight = Math.max(2, Math.round(3 + depth * 10));
+          const postGap = 8 + depth * 12;
           k.drawRect({
             color: postColor,
-            height: STRIP_H,
-            pos: k.vec2(c - ROAD_HALF - EDGE_W - 8, y),
-            width: 3,
+            height: postHeight,
+            pos: k.vec2(c - shoulder - postGap, y - postHeight),
+            width: postWidth,
           });
           k.drawRect({
             color: postColor,
-            height: STRIP_H,
-            pos: k.vec2(c + ROAD_HALF + EDGE_W + 5, y),
-            width: 3,
+            height: postHeight,
+            pos: k.vec2(c + shoulder + postGap, y - postHeight),
+            width: postWidth,
           });
         }
       }
@@ -334,12 +400,15 @@ export const registerGameScene = (
 
     const spawnTrafficWave = (): void => {
       const lane = pickLane();
-      traffic.push(spawnTraffic(k, lane));
+      const car = spawnTraffic(k, lane);
+      car.pos.x = laneScreenX(car.pos.y, lane);
+      traffic.push(car);
       if (rng() < cfg.pairChance) {
         const others = LANE_OFFSETS.filter((o) => o !== lane);
         const second = others[Math.floor(rng() * others.length)] ?? -lane;
         const extra = spawnTraffic(k, second);
         extra.pos.y = -48;
+        extra.pos.x = laneScreenX(extra.pos.y, second);
         traffic.push(extra);
       }
     };
@@ -426,7 +495,10 @@ export const registerGameScene = (
         hitPlayer("roadside");
       }
 
-      player.pos.x = playerScreenX(centerX(playerY), playerOffset);
+      player.pos.x = playerScreenX(
+        centerX(playerY),
+        playerOffset * (roadHalfAt(playerY) / ROAD_HALF)
+      );
       run.playerX = player.pos.x;
       run.playerY = playerY;
 
@@ -447,7 +519,10 @@ export const registerGameScene = (
       fuelTimer -= dt;
       if (fuelTimer <= 0) {
         fuelTimer = cfg.fuelGap;
-        cans.push(spawnFuel(k, pickLane()));
+        const lane = pickLane();
+        const can = spawnFuel(k, lane);
+        can.pos.x = laneScreenX(can.pos.y, lane);
+        cans.push(can);
       }
 
       // Traffic flows toward the player.
@@ -458,7 +533,7 @@ export const registerGameScene = (
           continue;
         }
         car.pos.y += (speed - cfg.trafficSpeed) * dt;
-        car.pos.x = centerX(car.pos.y) + car.laneOffset;
+        car.pos.x = laneScreenX(car.pos.y, car.laneOffset);
         if (car.pos.y > 200) {
           traffic.splice(i, 1);
           car.destroy();
@@ -476,7 +551,7 @@ export const registerGameScene = (
           continue;
         }
         can.pos.y += speed * dt;
-        can.pos.x = centerX(can.pos.y) + can.laneOffset;
+        can.pos.x = laneScreenX(can.pos.y, can.laneOffset);
         if (can.pos.y > 200) {
           cans.splice(i, 1);
           can.destroy();

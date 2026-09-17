@@ -1,6 +1,6 @@
 import type { RetroKaplay } from "@games/kit";
 
-/** Fixed screen row where the player's roadster sits. */
+/** Default screen row where the player's roadster starts. */
 export const PLAYER_Y = 142;
 
 export const spawnCar = (k: RetroKaplay, x: number) =>

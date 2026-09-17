@@ -1,6 +1,6 @@
 import { type PaletteMap, spriteFromGrid } from "@games/kit";
 
-/** Player roadster: red fill, white glass, dark outline/tires. */
+/** Forward-facing roadster: red fill, white glass, dark outline/tires. */
 const playerCarMap: PaletteMap = {
   ".": "transparent",
   K: 15,
@@ -26,19 +26,19 @@ const fuelMap: PaletteMap = {
 
 const CAR_BODY = [
   "................",
-  "....KKKKKKKK....",
-  "...KFFFFFFFFK...",
+  ".......K........",
+  "......KFK.......",
+  ".....KFFFK......",
+  "....KFFFFFK.....",
+  "...KKFWWWWFKK...",
   "..KKFFWWWWFFKK..",
   "..KKFFWWWWFFKK..",
+  "...KKFFFFFFKK...",
+  "..KKFFFFFFFFKK..",
   "...KFFFFFFFFK...",
   "...KFFFFFFFFK...",
   "..KKFFFFFFFFKK..",
   "..KKFFFFFFFFKK..",
-  "...KFFFFFFFFK...",
-  "...KFWWWWWWFK...",
-  "..KKFWWWWWWFKK..",
-  "..KKFFFFFFFFKK..",
-  "...KFFFFFFFFK...",
   "....KKKKKKKK....",
   "................",
 ];
