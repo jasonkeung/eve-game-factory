@@ -1,0 +1,67 @@
+{
+  "checks": [
+    {
+      "evidence": "window.__ready resolved",
+      "id": "ready",
+      "passed": true
+    },
+    {
+      "evidence": "state=title",
+      "id": "title-state",
+      "passed": true
+    },
+    {
+      "evidence": "state=playing",
+      "id": "start-playing",
+      "passed": true
+    },
+    {
+      "evidence": "playerX 160 -> left 129.68400000000005 -> right 190.342",
+      "id": "steer-seam",
+      "passed": true
+    },
+    {
+      "evidence": "boostActive=true meter 1 -> 0",
+      "id": "boost-seam",
+      "passed": true
+    },
+    {
+      "evidence": "state=playing score=100",
+      "id": "session-held",
+      "passed": true
+    },
+    {
+      "evidence": "score rose with lastEvent=pass",
+      "id": "score-event-seam",
+      "passed": true
+    },
+    {
+      "evidence": "state=win score=4600 lives=2 checkpoint=3",
+      "id": "terminal-state",
+      "passed": true
+    },
+    {
+      "evidence": "lives 3 -> 2 with lastEvent=hit seen=true",
+      "id": "life-event-seam",
+      "passed": true
+    },
+    {
+      "evidence": "state=gameover lives=0 cause=roadside hit events seen=true",
+      "id": "gameover-route",
+      "passed": true
+    },
+    {
+      "evidence": "clean",
+      "id": "no-console-errors",
+      "passed": true
+    }
+  ],
+  "consoleErrors": [],
+  "passed": true,
+  "screenshots": [
+    "games/sunset-sprint/playtest/title.png",
+    "games/sunset-sprint/playtest/gameplay.png",
+    "games/sunset-sprint/playtest/end.png"
+  ],
+  "slug": "sunset-sprint"
+}
