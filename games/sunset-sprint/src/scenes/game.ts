@@ -162,7 +162,7 @@ export const registerGameScene = (
           ],
         });
 
-        const worldY = y + scroll;
+        const worldY = y - scroll;
         if (((worldY % 36) + 36) % 36 < 18) {
           const laneHalf = half * 0.34;
           const nextLaneHalf = nextHalf * 0.34;
@@ -428,11 +428,11 @@ export const registerGameScene = (
 
       // Throttle.
       let driveDirection: -1 | 0 | 1 = 0;
-      if (k.isButtonDown("up")) {
+      if (k.isButtonDown("up") || k.isKeyDown(["up", "w"])) {
         driveDirection = -1;
         cruise = Math.min(CRUISE_MAX, cruise + 90 * dt);
       }
-      if (k.isButtonDown("down")) {
+      if (k.isButtonDown("down") || k.isKeyDown(["down", "s"])) {
         driveDirection = 1;
         cruise = Math.max(CRUISE_MIN, cruise - 120 * dt);
       }
@@ -473,13 +473,14 @@ export const registerGameScene = (
 
       // Steering.
       let steer = 0;
-      if (k.isButtonDown("left")) {
+      if (k.isButtonDown("left") || k.isKeyDown(["left", "a"])) {
         steer -= 1;
       }
-      if (k.isButtonDown("right")) {
+      if (k.isButtonDown("right") || k.isKeyDown(["right", "d"])) {
         steer += 1;
       }
       playerOffset = steerOffset(playerOffset, steer, dt);
+      player.angle = steer * -8;
       if (steer !== 0) {
         dustTimer -= dt;
         if (dustTimer <= 0) {

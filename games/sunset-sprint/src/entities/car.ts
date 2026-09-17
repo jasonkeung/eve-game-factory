@@ -9,6 +9,7 @@ export const spawnCar = (k: RetroKaplay, x: number) =>
     k.pos(x, PLAYER_Y),
     k.area({ scale: k.vec2(0.7, 0.8) }),
     k.anchor("center"),
+    k.rotate(0),
     k.opacity(1),
     k.z(20),
     "player",
