@@ -9,7 +9,10 @@ import {
   BOOST_TIME,
   enterTerminal,
   markOutcome,
+  movePlayerY,
   OFFROAD_LIMIT,
+  PLAYER_MAX_Y,
+  PLAYER_MIN_Y,
   playerScreenX,
   roadsideCheck,
   startBoost,
@@ -60,6 +63,22 @@ describe("steer-in-bounds", () => {
     const inside = roadsideCheck(OFFROAD_LIMIT - 1);
     expect(inside.hit).toBe(false);
     expect(inside.offset).toBe(OFFROAD_LIMIT - 1);
+  });
+});
+
+describe("drive-in-bounds", () => {
+  it("moves the car forward and back with held throttle controls", () => {
+    const startY = 142;
+    const forwardY = movePlayerY(startY, -1, 0.25);
+    const backY = movePlayerY(forwardY, 1, 0.5);
+
+    expect(forwardY).toBeLessThan(startY);
+    expect(backY).toBeGreaterThan(forwardY);
+  });
+
+  it("keeps the car on the visible road", () => {
+    expect(movePlayerY(PLAYER_MIN_Y, -1, 1)).toBe(PLAYER_MIN_Y);
+    expect(movePlayerY(PLAYER_MAX_Y, 1, 1)).toBe(PLAYER_MAX_Y);
   });
 });
 

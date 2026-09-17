@@ -15,6 +15,7 @@ import {
   applyHit,
   applyPass,
   markOutcome,
+  movePlayerY,
   playerScreenX,
   ROAD_HALF,
   roadsideCheck,
@@ -51,6 +52,7 @@ export const registerGameScene = (
     run.boostActive = false;
     run.boostMeter = 1;
     run.lastEvent = "";
+    run.playerY = PLAYER_Y;
 
     const cfgFor = (): CheckpointConfig =>
       CHECKPOINTS[run.level - 1] ?? CHECKPOINTS[0];
@@ -67,6 +69,7 @@ export const registerGameScene = (
     let slowTimer = 0;
     let invuln = 0;
     let playerOffset = 0;
+    let playerY = PLAYER_Y;
     let trafficTimer = 1;
     let fuelTimer = 3;
     let dustTimer = 0;
@@ -355,12 +358,17 @@ export const registerGameScene = (
       }
 
       // Throttle.
+      let driveDirection: -1 | 0 | 1 = 0;
       if (k.isButtonDown("up")) {
+        driveDirection = -1;
         cruise = Math.min(CRUISE_MAX, cruise + 90 * dt);
       }
       if (k.isButtonDown("down")) {
+        driveDirection = 1;
         cruise = Math.max(CRUISE_MIN, cruise - 120 * dt);
       }
+      playerY = movePlayerY(playerY, driveDirection, dt);
+      player.pos.y = playerY;
       let speed = cruise + cfg.speedBonus;
       if (k.isButtonDown("action")) {
         speed = Math.max(70, speed - 80);
@@ -418,8 +426,9 @@ export const registerGameScene = (
         hitPlayer("roadside");
       }
 
-      player.pos.x = playerScreenX(centerX(PLAYER_Y), playerOffset);
+      player.pos.x = playerScreenX(centerX(playerY), playerOffset);
       run.playerX = player.pos.x;
+      run.playerY = playerY;
 
       // Invulnerability flicker.
       if (invuln > 0) {

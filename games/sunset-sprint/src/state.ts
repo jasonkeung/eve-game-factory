@@ -15,6 +15,7 @@ export type RunState = {
   boostMeter: number;
   boostActive: boolean;
   playerX: number;
+  playerY: number;
   lastEvent: LastEvent;
   paused: boolean;
   extra: Record<string, unknown>;
@@ -31,6 +32,7 @@ export const createRunState = (): RunState => ({
   lives: START_LIVES,
   paused: false,
   playerX: 160,
+  playerY: 142,
   scene: "title",
   score: 0,
   state: "title",
@@ -47,6 +49,7 @@ export const resetRun = (run: RunState): void => {
   run.lives = START_LIVES;
   run.paused = false;
   run.playerX = 160;
+  run.playerY = 142;
   run.score = 0;
   run.timer = 15;
 };
@@ -59,6 +62,7 @@ export const toSeam = (run: RunState): GameSeam => ({
     lastEvent: run.lastEvent,
     paused: run.paused,
     playerX: run.playerX,
+    playerY: run.playerY,
     timer: run.timer,
     ...run.extra,
   },
