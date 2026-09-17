@@ -11,6 +11,10 @@ export const ROAD_HALF = 52;
 export const OFFROAD_LIMIT = ROAD_HALF - 7;
 /** How far the car is nudged back onto the asphalt after a scrape. */
 export const ROADSIDE_NUDGE = 12;
+/** Vertical range where the player can drive on the visible road. */
+export const PLAYER_MIN_Y = 104;
+export const PLAYER_MAX_Y = 150;
+export const PLAYER_MOVE_SPEED = 96;
 export const STEER_SPEED = 130;
 export const BOOST_TIME = 1.1;
 export const PASS_POINTS = 100;
@@ -28,6 +32,17 @@ export const steerOffset = (
 /** Screen x for the player, given the road center at the car's row. */
 export const playerScreenX = (center: number, offset: number): number =>
   center + offset;
+
+/** Move the car forward or back on screen while the road scrolls beneath it. */
+export const movePlayerY = (
+  y: number,
+  direction: -1 | 0 | 1,
+  dt: number
+): number =>
+  Math.max(
+    PLAYER_MIN_Y,
+    Math.min(PLAYER_MAX_Y, y + direction * PLAYER_MOVE_SPEED * dt)
+  );
 
 /**
  * Keep the car on the asphalt. A scrape reports one hit and nudges the car
